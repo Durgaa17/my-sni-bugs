@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SNI BUGS by sivd</title>
+<style>
+    body { 
+        font-family: 'Segoe UI', sans-serif; 
+        background: #0d0d0d; 
+        color: #0f0; 
+        margin: 0; 
+        padding: 20px; 
+        line-height: 1.6;
+    }
+    .header { 
+        background: #000; 
+        padding: 20px; 
+        text-align: center; 
+        border-radius: 12px; 
+        margin-bottom: 25px; 
+        border: 2px solid #0f0;
+        box-shadow: 0 0 15px #0f0;
+    }
+    .header h1 { margin: 0; font-size: 1.8em; }
+    .telegram { 
+        color: #0f0; 
+        font-weight: bold; 
+        text-decoration: none; 
+        font-size: 1.1em;
+    }
+    .telegram:hover { text-decoration: underline; }
+    .card { 
+        background: #1a1a1a; 
+        margin: 15px 0; 
+        padding: 20px; 
+        border-radius: 12px; 
+        border: 1px solid #0f0; 
+        box-shadow: 0 0 10px #0f0; 
+    }
+    .btn { 
+        background: #0f0; 
+        color: #000; 
+        border: none; 
+        padding: 10px 20px; 
+        margin: 5px; 
+        border-radius: 8px; 
+        cursor: pointer; 
+        font-weight: bold; 
+    }
+    .btn:hover { background: #0c0; }
+    pre { 
+        background: #000; 
+        padding: 15px; 
+        border-radius: 8px; 
+        white-space: pre-wrap; 
+        font-size: 14px; 
+        border: 1px solid #0f0; 
+        word-break: break-all;
+    }
+    details { margin: 10px 0; }
+    summary { 
+        cursor: pointer; 
+        font-weight: bold; 
+        color: #0f0; 
+        font-size: 1.1em;
+    }
+    .disclaimer {
+        background: #300; 
+        color: #f00; 
+        padding: 20px; 
+        margin: 30px 0; 
+        border-radius: 12px; 
+        border: 2px solid #f00;
+        text-align: center;
+        font-weight: bold;
+        font-size: 1.1em;
+    }
+    .update { 
+        color: #0c0; 
+        font-size: 0.9em; 
+        margin-top: 10px;
+    }
+</style>
+</head>
+<body>
+
+<!-- === HEADER BY SIVD === -->
+<div class="header">
+    <h1>SNI BUGS CLOUD v1.0</h1>
+    <p>by <a href="https://t.me/sivd" target="_blank" class="telegram">@sivd</a></p>
+    <div id="last-update" class="update"></div>
+</div>
+
+<div id="content">Loading SNI bugs from <code>payload_test_results.txt</code>...</div>
+
+<!-- === STRONG DISCLAIMER === -->
+<div class="disclaimer">
+    <strong>EDUCATIONAL PURPOSE ONLY</strong><br><br>
+    This tool is for <u>learning and research</u> only.<br>
+    Do <strong>NOT</strong> use for illegal activities, bypassing ISP policies, or unauthorized access.<br>
+    The author (<strong>@sivd</strong>) and host (<strong>GitHub</strong>) are <u>not responsible</u> for misuse.<br>
+    Use at your own risk. Comply with local laws.
+</div>
+
+<script>
+// CHANGE THIS TO YOUR REPO!
+const REPO = "YOUR_USERNAME/sni-bugs";  // ← EDIT HERE!
+const TXT_URL = `https://raw.githubusercontent.com/${REPO}/main/payload_test_results.txt`;
+
+async function loadBugs() {
+    try {
+        const res = await fetch(TXT_URL + '?t=' + Date.now());
+        const text = await res.text();
+        document.getElementById("last-update").innerHTML = `<div class="update">Last Update: ${new Date().toLocaleString()}</div>`;
+        parseAndDisplay(text);
+    } catch (e) {
+        document.getElementById("content").innerHTML = "<p style='color:red; text-align:center;'>ERROR: Check repo URL or internet connection.</p>";
+    }
+}
+
+function parseAndDisplay(text) {
+    const lines = text.split('\n');
+    const hostPayloads = {};
+    const payloadTemplates = [
+        "GET / HTTP/1.1\\r\\nHost: [host]\\r\\nConnection: Keep-Alive\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n",
+        "GET /?t=1 HTTP/1.1\\r\\nHost: [host]\\r\\nX-Online-Host: [host]\\r\\nConnection: Keep-Alive\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n",
+        "GET /ws HTTP/1.1\\r\\nHost: [host]\\r\\nUpgrade: websocket\\r\\nConnection: Upgrade\\r\\nSec-WebSocket-Key: test\\r\\nSec-WebSocket-Version: 13\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n",
+        "GET / HTTP/1.1\\r\\nHost: [host]\\r\\nConnection: Keep-Alive\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\nCONNECT [host]@ [crlf]Host: [host]\\r\\n\\r\\n",
+        "GET / HTTP/1.1\\r\\nHost: [host]\\r\\nConnection: Upgrade\\r\\nUser-Agent: Mozilla/5.0\\r\\nUpgrade: websocket\\r\\n\\r\\n",
+        "GET / HTTP/1.1\\r\\nHost: [host]\\r\\nConnection: Upgrade\\r\\nUser-Agent: Mozilla/5.0\\r\\nUpgrade: websocket\\r\\n\\r\\n",
+        "GET wss://[host]/ HTTP/1.1\\r\\nHost: [host]\\r\\n\\r\\nGET / HTTP/1.1\\r\\nHost: [host]\\r\\nConnection: Upgrade\\r\\nUser-Agent: Mozilla/5.0\\r\\nUpgrade: websocket\\r\\n\\r\\n",
+        "PATCH / HTTP/1.1\\r\\nHost: [host]\\r\\nHost: [host]\\r\\nConnection: Upgrade\\r\\nUser-Agent: Mozilla/5.0\\r\\nUpgrade: websocket\\r\\n\\r\\n",
+        "GET /cdn-cgi/trace HTTP/1.1\\r\\nHost: [host]\\r\\n\\r\\nGET / HTTP/1.1\\r\\nHost: [host]\\r\\nConnection: Upgrade\\r\\nUser-Agent: Mozilla/5.0\\r\\nUpgrade: websocket\\r\\n\\r\\n",
+        "GET http://[host]/worryfree HTTP/1.1\\r\\nHost: [host]\\r\\nUpgrade: websocket\\r\\n\\r\\n",
+        "GET [host_port]/ HTTP/1.1\\r\\nHost: [host]\\r\\nConnection: Keep-Alive\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n",
+        "GET / HTTP/1.1\\r\\nHost: [host]\\r\\nConnection: Keep-Alive\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n[split][crlf]CONNECT [host]:443 HTTP/1.1\\r\\n\\r\\n",
+        "GET /?frontquery HTTP/1.1\\r\\nHost: [host]\\r\\nX-Online-Host: [host]\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n",
+        "GET / HTTP/1.1\\r\\nHost: [host]\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n?backquery",
+        "GET /ws HTTP/1.1\\r\\nHost: [host]\\r\\nUpgrade: websocket\\r\\nConnection: Upgrade\\r\\nSec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\\r\\nSec-WebSocket-Version: 13\\r\\n\\r\\n",
+        "CONNECT [host]:443 HTTP/1.1\\r\\nHost: [host]\\r\\n\\r\\n",
+        "GET https://[host]/ HTTP/1.1\\r\\nHost: [host]\\r\\nConnection: Keep-Alive\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n",
+        "GET / HTTP/1.1\\r\\nHost: [host]\\r\\nProxy-Connection: Keep-Alive\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n",
+        "GET /cdn-cgi/trace HTTP/1.1\\r\\nHost: [host]\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n",
+        "GET / HTTP/1.1\\r\\nHost: [host]\\r\\nSNI: [host]\\r\\nConnection: Keep-Alive\\r\\n\\r\\n",
+        "GET /dns-query HTTP/1.1\\r\\nHost: [host]\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n",
+        "GET / HTTP/1.1\\r\\nHost: [host]\\r\\nX-Forwarded-For: 127.0.0.1\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n",
+        "GET / HTTP/1.1\\r\\nHost: [host]\\r\\nConnection: Keep-Alive\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n[split]\\r\\n",
+        "CONNECT [host]:80 HTTP/1.1\\r\\nHost: [host]\\r\\nProxy-Authorization: Basic\\r\\n\\r\\n",
+        "GET / HTTP/2\\r\\nHost: [host]\\r\\nConnection: Upgrade\\r\\nUpgrade: h2c\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n"
+    ];
+
+    lines.forEach(line => {
+        if (!line.toUpperCase().includes("PASS")) return;
+        const pidMatch = line.match(/Payload\s*(\d+)/i);
+        const hostMatch = line.match(/([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
+        if (pidMatch && hostMatch) {
+            const host = hostMatch[1];
+            const pid = parseInt(pidMatch[1]);
+            if (!hostPayloads[host]) hostPayloads[host] = [];
+            hostPayloads[host].push(pid);
+        }
+    });
+
+    let html = "";
+    for (const [host, pids] of Object.entries(hostPayloads)) {
+        const isUnifi = host.includes("unifi") || host.includes("tm.com");
+        const needsSplit = pids.some(p => payloadTemplates[p-1]?.includes("[split]") || payloadTemplates[p-1]?.includes("CONNECT [host]@"));
+        const method = isUnifi ? "SNI ONLY" : needsSplit ? "DOMAIN POINTING" : "BUG HOST";
+        
+        html += `<div class="card">`;
+        html += `<h2>${host}</h2>`;
+        html += `<p><b>Type:</b> ${isUnifi ? "UNIFI BUG" : "GENERAL"} | <b>Method:</b> ${method}</p>`;
+        if (needsSplit) html += `<p><b>Extra:</b> Use DNS IP or Host override</p>`;
+
+        pids.sort((a,b)=>a-b).forEach(pid => {
+            let payload = payloadTemplates[pid-1] || "UNKNOWN";
+            payload = payload.replace(/\[host\]/g, host).replace(/\\r\\n/g, "[crlf]");
+            html += `<details><summary>PAYLOAD ${pid} → TAP TO COPY</summary>`;
+            html += `<pre>${payload}</pre>`;
+            html += `<button class="btn" onclick="copyPayload(this)">COPY PAYLOAD</button></details>`;
+        });
+        html += `</div>`;
+    }
+    document.getElementById("content").innerHTML = html || "<p style='text-align:center;'>No PASS found in file.</p>";
+}
+
+function copyPayload(btn) {
+    const pre = btn.previousElementSibling;
+    navigator.clipboard.writeText(pre.innerText).then(() => {
+        btn.innerText = "COPIED!";
+        setTimeout(() => btn.innerText = "COPY PAYLOAD", 1500);
+    });
+}
+
+// AUTO LOAD + REFRESH EVERY 5 MINUTES
+loadBugs();
+setInterval(loadBugs, 300000);
+</script>
+
+</body>
+</html>
