@@ -39,9 +39,9 @@
 </div>
 
 <script>
-// === CHANGE THIS LINE ONLY ===
-const REPO = "YOUR_USERNAME/sni-bugs";  // ← PUT YOUR USERNAME/REPO HERE
-const TXT_URL = `https-raw.githubusercontent.com/${REPO}/main/payload.txt`;
+// AUTO-CONFIGURED FOR YOUR REPO
+const REPO = "Durgaa17/my-sni-bugs";
+const TXT_URL = `https://raw.githubusercontent.com/${REPO}/main/payload.txt`;
 
 async function loadBugs() {
     try {
@@ -51,12 +51,12 @@ async function loadBugs() {
         document.getElementById("last-update").innerHTML = `<div class="update">Updated: ${new Date().toLocaleString()}</div>`;
         parseAndDisplay(text);
     } catch (e) {
-        document.getElementById("content").innerHTML = `<p style='color:red; text-align:center;'>
-            <strong>ERROR:</strong><br>
-            1. File must be named: <code>payload.txt</code><br>
-            2. Repo URL: <code>https://github.com/${REPO}</code><br>
-            3. Check internet
-        </p>`;
+        document.getElementById("content").innerHTML = `
+            <p style='color:red; text-align:center;'>
+                <strong>ERROR: payload.txt NOT FOUND</strong><br><br>
+                Upload your file as: <code>payload.txt</code><br>
+                <a href='https://github.com/Durgaa17/my-sni-bugs/upload/main' target='_blank' style='color:#0f0;'>Click here to upload now</a>
+            </p>`;
     }
 }
 
@@ -88,7 +88,7 @@ function parseAndDisplay(text) {
         "GET / HTTP/1.1\\r\\nHost: [host]\\r\\nX-Forwarded-For: 127.0.0.1\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n",
         "GET / HTTP/1.1\\r\\nHost: [host]\\r\\nConnection: Keep-Alive\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n[split]\\r\\n",
         "CONNECT [host]:80 HTTP/1.1\\r\\nHost: [host]\\r\\nProxy-Authorization: Basic\\r\\n\\r\\n",
-        "GET / HTTP/2\\r\\nHost: [host]\\r\\nConnection: Upgrade>\\r\\nUpgrade: h2c\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n"
+        "GET / HTTP/2\\r\\nHost: [host]\\r\\nConnection: Upgrade\\r\\nUpgrade: h2c\\r\\nUser-Agent: Mozilla/5.0\\r\\n\\r\\n"
     ];
 
     lines.forEach(line => {
@@ -98,8 +98,8 @@ function parseAndDisplay(text) {
         if (pidMatch && hostMatch) {
             const host = hostMatch[1];
             const pid = parseInt(pidMatch[1]);
-            if (!hostPayloads[host]) hostPayloads[host] = [];
             if (pid >= 1 && pid <= payloadTemplates.length) {
+                if (!hostPayloads[host]) hostPayloads[host] = [];
                 hostPayloads[host].push(pid);
             }
         }
@@ -117,7 +117,7 @@ function parseAndDisplay(text) {
         if (needsSplit) html += `<p><b>Extra:</b> Use DNS IP or Host override</p>`;
 
         pids.sort((a,b)=>a-b).forEach(pid => {
-            let payload = payloadTemplates[pid-1] || "UNKNOWN PAYLOAD";
+            let payload = payloadTemplates[pid-1] || "UNKNOWN";
             payload = payload.replace(/\[host\]/g, host).replace(/\\r\\n/g, "[crlf]");
             html += `<details><summary>PAYLOAD ${pid} → TAP TO COPY</summary>`;
             html += `<pre>${payload}</pre>`;
@@ -125,7 +125,7 @@ function parseAndDisplay(text) {
         });
         html += `</div>`;
     }
-    document.getElementById("content").innerHTML = html || "<p style='text-align:center; color:orange;'>No PASS lines found in payload.txt<br>Check format: <code>Payload 4: biz.unifi.com.my | PASS</code></p>";
+    document.getElementById("content").innerHTML = html || "<p style='text-align:center; color:orange;'>No PASS lines in payload.txt<br>Example: <code>Payload 4: biz.unifi.com.my | PASS</code></p>";
 }
 
 function copyPayload(btn) {
